@@ -1,0 +1,1 @@
+start_cmd = "python database_setup.py"

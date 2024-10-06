@@ -1,5 +1,5 @@
 'use client'
-
+ 
 import { AuthDialog } from '@/components/auth-dialog'
 import { Chat } from '@/components/chat'
 import { ChatInput } from '@/components/chat-input'
@@ -20,7 +20,39 @@ import { experimental_useObject as useObject } from 'ai/react'
 import { usePostHog } from 'posthog-js/react'
 import { useEffect, useState } from 'react'
 import { useLocalStorage } from 'usehooks-ts'
-
+ 
+//@ts-ignore
+function storeJSON(key, data) {
+  try {
+    const jsonString = JSON.stringify(data);
+    localStorage.setItem(key, jsonString);
+    console.log(`Data stored with key: ${key}`);
+  } catch (error) {
+    console.error('Error storing data:', error);
+  }
+}
+ 
+// Function to retrieve JSON data arrray from local storage
+//@ts-ignore
+function retrieveJSONArray(key) {
+  try {
+    const jsonString = localStorage.getItem(key);
+    if (jsonString === null) {
+      console.log(`No data found for key: ${key}`);
+      return [];
+    }
+    const data = JSON.parse(jsonString);
+    console.log(`Data retrieved for key: ${key}`, data);
+    if (Array.isArray(data)) {
+      return data;
+    }
+    return [];
+  } catch (error) {
+    console.error('Error retrieving data:', error);
+    return [];
+  }
+}
+ 
 export default function Home() {
   const [chatInput, setChatInput] = useLocalStorage('chat', '')
   const [files, setFiles] = useState<File[]>([])
@@ -33,9 +65,9 @@ export default function Home() {
       model: 'claude-3-5-sonnet-20240620',
     },
   )
-
+ 
   const posthog = usePostHog()
-
+ 
   const [result, setResult] = useState<ExecutionResult>()
   const [messages, setMessages] = useState<Message[]>([])
   const [fragment, setFragment] = useState<DeepPartial<FragmentSchema>>()
@@ -44,7 +76,7 @@ export default function Home() {
   const [isAuthDialogOpen, setAuthDialog] = useState(false)
   const [authView, setAuthView] = useState<AuthViewType>('sign_in')
   const { session, apiKey } = useAuth(setAuthDialog, setAuthView)
-
+ 
   const currentModel = modelsList.models.find(
     (model) => model.id === languageModel.model,
   )
@@ -53,7 +85,7 @@ export default function Home() {
       ? templates
       : { [selectedTemplate]: templates[selectedTemplate] }
   const lastMessage = messages[messages.length - 1]
-
+ 
   const { object, submit, isLoading, stop, error } = useObject({
     api:
       currentModel?.id === 'o1-preview' || currentModel?.id === 'o1-mini'
@@ -68,7 +100,7 @@ export default function Home() {
         posthog.capture('fragment_generated', {
           template: fragment?.template,
         })
-
+ 
         const response = await fetch('/api/sandbox', {
           method: 'POST',
           body: JSON.stringify({
@@ -77,11 +109,11 @@ export default function Home() {
             apiKey,
           }),
         })
-
+ 
         const result = await response.json()
         console.log('result', result)
         posthog.capture('sandbox_created', { url: result.url })
-
+ 
         setResult(result)
         setCurrentPreview({ fragment, result })
         setMessage({ result })
@@ -90,7 +122,16 @@ export default function Home() {
       }
     },
   })
-
+ 
+  useEffect(() => {
+    let localMessages = retrieveJSONArray('messages');
+    console.log({localMessages});
+ 
+    if (Array.isArray(localMessages) && localMessages.length > 0) {
+      setMessages(localMessages)
+    }
+  }, [])
+ 
   useEffect(() => {
     if (object) {
       setFragment(object)
@@ -98,7 +139,7 @@ export default function Home() {
         { type: 'text', text: object.commentary || '' },
         { type: 'code', text: object.code || '' },
       ]
-
+ 
       if (!lastMessage || lastMessage.role !== 'assistant') {
         addMessage({
           role: 'assistant',
@@ -106,7 +147,7 @@ export default function Home() {
           object,
         })
       }
-
+ 
       if (lastMessage && lastMessage.role === 'assistant') {
         setMessage({
           content,
@@ -115,11 +156,11 @@ export default function Home() {
       }
     }
   }, [object])
-
+ 
   useEffect(() => {
     if (error) stop()
   }, [error])
-
+ 
   function setMessage(message: Partial<Message>, index?: number) {
     setMessages((previousMessages) => {
       const updatedMessages = [...previousMessages]
@@ -127,36 +168,36 @@ export default function Home() {
         ...previousMessages[index ?? previousMessages.length - 1],
         ...message,
       }
-
+      storeJSON('messages', updatedMessages);
       return updatedMessages
     })
   }
-
+ 
   async function handleSubmitAuth(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-
+ 
     if (!session) {
       return setAuthDialog(true)
     }
-
+ 
     if (isLoading) {
       stop()
     }
-
+ 
     const content: Message['content'] = [{ type: 'text', text: chatInput }]
     const images = await toMessageImage(files)
-
+ 
     if (images.length > 0) {
       images.forEach((image) => {
         content.push({ type: 'image', image })
       })
     }
-
+ 
     const updatedMessages = addMessage({
       role: 'user',
       content,
     })
-
+ 
     submit({
       userID: session?.user?.id,
       messages: toAISDKMessages(updatedMessages),
@@ -164,17 +205,17 @@ export default function Home() {
       model: currentModel,
       config: languageModel,
     })
-
+ 
     setChatInput('')
     setFiles([])
     setCurrentTab('code')
-
+ 
     posthog.capture('chat_submit', {
       template: selectedTemplate,
       model: languageModel.model,
     })
   }
-
+ 
   function retry() {
     submit({
       userID: session?.user?.id,
@@ -184,30 +225,32 @@ export default function Home() {
       config: languageModel,
     })
   }
-
+ 
   function addMessage(message: Message) {
     setMessages((previousMessages) => [...previousMessages, message])
-    return [...messages, message]
+    let finalMessages = [...messages, message]
+    storeJSON('messages', finalMessages);
+    return finalMessages;
   }
-
+ 
   function handleSaveInputChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
     setChatInput(e.target.value)
   }
-
+ 
   function handleFileChange(files: File[]) {
     setFiles(files)
   }
-
+ 
   function logout() {
     supabase
       ? supabase.auth.signOut()
       : console.warn('Supabase is not initialized')
   }
-
+ 
   function handleLanguageModelChange(e: LLMModelConfig) {
     setLanguageModel({ ...languageModel, ...e })
   }
-
+ 
   function handleSocialClick(target: 'github' | 'x' | 'discord') {
     if (target === 'github') {
       window.open('https://github.com/e2b-dev/fragments', '_blank')
@@ -216,21 +259,22 @@ export default function Home() {
     } else if (target === 'discord') {
       window.open('https://discord.gg/U7KEcGErtQ', '_blank')
     }
-
+ 
     posthog.capture(`${target}_click`)
   }
-
+ 
   function handleClearChat() {
     stop()
     setChatInput('')
     setFiles([])
     setMessages([])
+    storeJSON('messages', []);
     setFragment(undefined)
     setResult(undefined)
     setCurrentTab('code')
     setIsPreviewLoading(false)
   }
-
+ 
   function setCurrentPreview(preview: {
     fragment: DeepPartial<FragmentSchema> | undefined
     result: ExecutionResult | undefined
@@ -238,12 +282,16 @@ export default function Home() {
     setFragment(preview.fragment)
     setResult(preview.result)
   }
-
+ 
   function handleUndo() {
-    setMessages((previousMessages) => [...previousMessages.slice(0, -2)])
+    setMessages((previousMessages) => {
+      let finalUndoMessages = [...previousMessages.slice(0, -2)]
+      storeJSON('messages', finalUndoMessages)
+      return finalUndoMessages
+    })
     setCurrentPreview({ fragment: undefined, result: undefined })
   }
-
+ 
   return (
     <main className="flex min-h-screen max-h-screen">
       {supabase && (

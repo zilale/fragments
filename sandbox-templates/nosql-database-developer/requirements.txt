@@ -1,0 +1,5 @@
+postgresql
+mysql
+sqlalchemy
+psycopg2
+mysql-connector-python

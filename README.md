@@ -71,7 +71,7 @@ Create a `.env.local` file and set the following:
 
 ```sh
 # Get your API key here - https://e2b.dev/
-E2B_API_KEY="your-e2b-api-key"
+E2B_API_KEY=09654a05-cf69-4d1d-9a0f-62b34950b8fc
 
 # OpenAI API Key
 OPENAI_API_KEY=

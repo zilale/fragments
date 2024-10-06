@@ -1,27 +1,50 @@
 {
   "code-interpreter-multilang": {
-    "name": "Python data analyst",
-    "lib": ["python", "jupyter", "numpy", "pandas", "matplotlib", "seaborn", "plotly"],
+    "name": "Python Data Analyst",
+    "lib": [
+      "python",
+      "jupyter",
+      "numpy",
+      "pandas",
+      "matplotlib",
+      "seaborn",
+      "plotly",
+      "sqlalchemy",
+      "psycopg2",
+      "pymongo",
+      "motor",
+      "mongoose",
+      "sqlite3"
+    ],
     "file": "script.py",
-    "instructions": "Runs code as a Jupyter notebook cell. Strong data analysis angle. Can use complex visualisation to explain results.",
+    "instructions": "Runs code as a Jupyter notebook cell. Strong data analysis angle. Can use complex visualization to explain results. Can connect to and manage databases.",
     "port": null
   },
   "nextjs-developer": {
-    "name": "Next.js developer",
-    "lib": ["nextjs@14.2.5", "typescript", "@types/node", "@types/react", "@types/react-dom", "postcss", "tailwindcss", "shadcn"],
+    "name": "Next.js Developer",
+    "lib": [
+      "nextjs@14.2.5",
+      "typescript",
+      "@types/node",
+      "@types/react",
+      "@types/react-dom",
+      "postcss",
+      "tailwindcss",
+      "shadcn"
+    ],
     "file": "pages/index.tsx",
     "instructions": "A Next.js 13+ app that reloads automatically. Using the pages router.",
     "port": 3000
   },
   "vue-developer": {
-    "name": "Vue.js developer",
+    "name": "Vue.js Developer",
     "lib": ["vue@latest", "nuxt@3.13.0", "tailwindcss"],
     "file": "app.vue",
     "instructions": "A Vue.js 3+ app that reloads automatically. Only when asked specifically for a Vue app.",
     "port": 3000
   },
   "streamlit-developer": {
-    "name": "Streamlit developer",
+    "name": "Streamlit Developer",
     "lib": [
       "streamlit",
       "pandas",
@@ -32,11 +55,11 @@
       "plotly"
     ],
     "file": "app.py",
-    "instructions": "A streamlit app that reloads automatically.",
+    "instructions": "A Streamlit app that reloads automatically.",
     "port": 8501
   },
   "gradio-developer": {
-    "name": "Gradio developer",
+    "name": "Gradio Developer",
     "lib": [
       "gradio",
       "pandas",
@@ -47,7 +70,21 @@
       "plotly"
     ],
     "file": "app.py",
-    "instructions": "A gradio app. Gradio Blocks/Interface should be called demo.",
+    "instructions": "A Gradio app. Gradio Blocks/Interface should be called demo.",
     "port": 7860
+  },
+  "relational-database-developer": {
+    "name": "Relational Database Developer",
+    "lib": ["sqlalchemy", "psycopg2", "mysql-connector-python"],
+    "file": "database_setup.py",
+    "instructions": "Handles relational database setup and management using PostgreSQL or MySQL. Can perform schema design, migrations, and queries.",
+    "port": null
+  },
+  "nosql-database-developer": {
+    "name": "NoSQL Database Developer",
+    "lib": ["pymongo", "motor"],
+    "file": "nosql_setup.py",
+    "instructions": "Manages NoSQL databases such as MongoDB. Capable of performing data modeling, CRUD operations, indexing, and optimizations.",
+    "port": null
   }
 }
